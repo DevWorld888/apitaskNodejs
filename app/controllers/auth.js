@@ -1,13 +1,15 @@
 import bcrypt from "bcryptjs";
-import { db } from "../drizzle/client.js";
-import { users } from "../drizzle/schema.js";
+import { db } from '../config/db.js';
+import { users } from "../../drizzle/schema.ts";
+import { eq } from "drizzle-orm";
 import jwt from "jsonwebtoken";
 
 export const register = async (req, res) => {
     const { username, email, password } = req.body;
     try {
         // Verificar si el usuario ya existe
-        const existingUser = await db.select().from(users).where(users.email.eq(email));
+        const existingUser = await db.select().from(users).where(eq(users.email, email));
+        console.log(existingUser, '--- existing user ---');
         if (existingUser.length > 0) {
             return res.status(400).json({ message: "El usuario ya existe" });
         }
@@ -22,7 +24,7 @@ export const register = async (req, res) => {
         res.status(201).json({ message: "Usuario registrado exitosamente", user: newUser[0] });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: "Error en el servidor" });
+        res.status(500).json({ message: "Error en el servidor", error: error.message });
     }
 };
 
@@ -30,7 +32,8 @@ export const login = async (req, res) => {
     const { email, password } = req.body;
     try {
         // Verificar si el usuario existe
-        const user = await db.select().from(users).where(users.email.eq(email)).limit(1);
+        
+        const user = await db.select().from(users).where(eq(users.email, email)).limit(1);
         if (user.length === 0) {
             return res.status(400).json({ message: "Credenciales inválidas" });
         }

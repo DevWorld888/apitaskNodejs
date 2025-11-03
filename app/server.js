@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import connectDB from './config/db.js';
 import { welcome } from './controllers/welcome.js';
 import tasksRouter from './routes/tasks.js';
+import authRouter from './routes/auth.js';
 // load enviroment variables from .env file
 dotenv.config();
 
@@ -26,7 +27,9 @@ app.get('/', welcome);
 // Tasks routes
 app.use('/api/tasks',tasksRouter );
 
+// Auth routes
 
+app.use('/api/auth', authRouter);
 
 // Start the server
 app.listen(port, () => {
