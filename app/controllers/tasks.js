@@ -6,7 +6,8 @@ import {tasks} from '../../drizzle/schema.ts';
 // Ruta: GET /api/tasks
 export const getAllTasks = async (req, res) => {
     try {
-        const results = await db.select().from(tasks);
+        // Solo mostrar tareas del usuario autenticado
+        const results = await db.select().from(tasks).where(eq(tasks.userId, req.user.id));
         res.status(200).json({ tasks: results });
     } catch (error) {
         console.error('Error retrieving tasks:', error);
@@ -16,10 +17,17 @@ export const getAllTasks = async (req, res) => {
 // Crear una nueva tarea
 // Ruta: POST /api/tasks
 export const createTask = async (req, res) => {
-    const { title, description } = req.body;
+    const { title, description, priority, dueDate } = req.body;
     try {
-        const newTask = await db.insert(tasks).values({ title, description });
-        res.status(201).json({ task: newTask });
+        // Asociar la tarea al usuario autenticado
+        const newTask = await db.insert(tasks).values({
+            title,
+            description,
+            priority,
+            dueDate,
+            userId: req.user.id
+        }).returning();
+        res.status(201).json({ task: newTask[0] });
     } catch (error) {
         console.error('Error creating task:', error);
         res.status(500).json({ error: 'Internal server error' });
@@ -30,11 +38,14 @@ export const createTask = async (req, res) => {
 // example: /api/tasks/1
 export const getTaskById = async (req, res) => {
     const { id } = req.params;
-    console.log('Fetching task with ID:', id);
     try {
-        const task = await db.select().from(tasks).where(eq(tasks.id, id)).limit(1);
+        // Buscar la tarea por id y userId
+        const task = await db.select().from(tasks)
+            .where(eq(tasks.id, id))
+            .where(eq(tasks.userId, req.user.id))
+            .limit(1);
         if (task.length === 0) {
-            return res.status(404).json({ error: 'Task not found' });
+            return res.status(404).json({ error: 'Task not found or not authorized' });
         }
         res.status(200).json({ task: task[0] });
     } catch (error) {
@@ -49,14 +60,18 @@ export const updateTaskById = async (req, res) => {
     const { id } = req.params;
     const { title, description } = req.body;
     try {
-        const updatedTask = await db.update(tasks).set({ title, description }).where(eq(tasks.id, id));
-        console.log('Updated task:', updatedTask);
-        const task = await db.select().from(tasks).where(eq(tasks.id, id)).limit(1);
+        // Verificar que la tarea pertenezca al usuario
+        const task = await db.select().from(tasks)
+            .where(eq(tasks.id, id))
+            .where(eq(tasks.userId, req.user.id))
+            .limit(1);
         if (task.length === 0) {
-            return res.status(404).json({ error: 'Task not found' });
+            return res.status(404).json({ error: 'Task not found or not authorized' });
         }
-        res.status(200).json({ task: task[0], message: 'Task updated successfully' });
-        
+        // Actualizar solo si es dueño
+        await db.update(tasks).set({ title, description }).where(eq(tasks.id, id)).where(eq(tasks.userId, req.user.id));
+        const updatedTask = await db.select().from(tasks).where(eq(tasks.id, id)).limit(1);
+        res.status(200).json({ task: updatedTask[0], message: 'Task updated successfully' });
     } catch (error) {
         console.error('Error updating task:', error);
         res.status(500).json({ error: 'Internal server error' });
@@ -67,12 +82,17 @@ export const updateTaskById = async (req, res) => {
 export const deleteTaskById = async (req, res) => {
     const { id } = req.params;
     try {
-        const deletedTask = await db.delete(tasks).where(eq(tasks.id, id));
-        console.log('Deleted task:', deletedTask);
-        if (deletedTask.length === 0) {
-            return res.status(404).json({ error: 'Task not found' });
+        // Verificar que la tarea pertenezca al usuario
+        const task = await db.select().from(tasks)
+            .where(eq(tasks.id, id))
+            .where(eq(tasks.userId, req.user.id))
+            .limit(1);
+        if (task.length === 0) {
+            return res.status(404).json({ error: 'Task not found or not authorized' });
         }
-        res.status(204).send().json({ message: 'Task deleted successfully' });
+        // Eliminar solo si es dueño
+        await db.delete(tasks).where(eq(tasks.id, id)).where(eq(tasks.userId, req.user.id));
+        res.status(200).json({ message: 'Task deleted successfully' });
     } catch (error) {
         console.error('Error deleting task:', error);
         res.status(500).json({ error: 'Internal server error' });
