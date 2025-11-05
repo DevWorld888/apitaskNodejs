@@ -1,5 +1,5 @@
 import { db } from '../config/db.js';
-import { eq, sql } from 'drizzle-orm'; // Operadores para WHERE
+import { eq, and } from 'drizzle-orm'; // Operadores para WHERE
 import {tasks} from '../../drizzle/schema.ts';
 
 // Obtener todas las tareas
@@ -81,18 +81,25 @@ export const updateTaskById = async (req, res) => {
 // Ruta: DELETE /api/tasks/:id
 export const deleteTaskById = async (req, res) => {
     const { id } = req.params;
+    const userId = req.user?.id;
+    console.log('Delete request - id:', id, 'userId:', userId);
+    if (!id || !userId) {
+        return res.status(400).json({ error: 'Invalid task id or user id' });
+    }
     try {
         // Verificar que la tarea pertenezca al usuario
         const task = await db.select().from(tasks)
             .where(eq(tasks.id, id))
-            .where(eq(tasks.userId, req.user.id))
+            .where(eq(tasks.userId, userId))
             .limit(1);
+        console.log('Task found for delete:', task);
         if (task.length === 0) {
             return res.status(404).json({ error: 'Task not found or not authorized' });
         }
         // Eliminar solo si es dueño
-        await db.delete(tasks).where(eq(tasks.id, id)).where(eq(tasks.userId, req.user.id));
-        res.status(200).json({ message: 'Task deleted successfully' });
+        // await db.delete(tasks).where(eq(tasks.id, id)).where(eq(tasks.userId, userId));
+        await db.delete(tasks).where(and(eq(tasks.id, id), eq(tasks.userId, userId)));
+        res.status(200).json({ message: 'Task deleted successfully', task: task[0] });
     } catch (error) {
         console.error('Error deleting task:', error);
         res.status(500).json({ error: 'Internal server error' });
