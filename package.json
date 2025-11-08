@@ -23,6 +23,7 @@
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.16.3",
     "postgres": "^3.4.7",
+    "react-router-dom": "^7.9.5",
     "ts-node": "^10.9.2",
     "tsx": "^4.20.6"
   },
