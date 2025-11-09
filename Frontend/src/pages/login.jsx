@@ -1,11 +1,14 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { FcTimeline } from "react-icons/fc";
+import { FaCat } from "react-icons/fa";
+import { Link, useNavigate } from "react-router-dom";
 import "./Login.css";
 import loginImage from "../assets/login.png";
 
 function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const navigate = useNavigate();
+  const [email, setEmail] = useState("maria@example.com");
+  const [password, setPassword] = useState("supersegura");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -15,15 +18,16 @@ function Login() {
     setError("");
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:3000/auth/login", {
+      const res = await fetch("http://localhost:3000/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
       const data = await res.json();
       if (res.ok) {
+        alert(data.message);
         localStorage.setItem("token", data.token);
-        window.location.href = "/dashboard";
+        navigate("/dashboard");
       } else {
         setError(data.message || "Error al iniciar sesión");
       }
@@ -39,7 +43,7 @@ function Login() {
       <div className="login-left">
         <div className="login-illustration">
           <img src={loginImage} alt="Task Manager" className="login-image" />
-          <h1>📊 Task Manager</h1>
+          <h1><FaCat /> Task Manager</h1>
           <p>Gestiona tus tareas de manera eficiente<br />y mantente organizado cada día</p>
         </div>
       </div>
@@ -96,7 +100,7 @@ function Login() {
             </div>
 
             <button type="submit" className="login-button" disabled={loading}>
-              {loading ? "Accediendo..." : "Start trading"}
+              {loading ? "Accediendo..." : "Get Started"}
             </button>
           </form>
 

@@ -1,6 +1,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import connectDB from './config/db.js';
+import cors from 'cors';
 import { welcome } from './controllers/welcome.js';
 import tasksRouter from './routes/tasks.js';
 import authRouter from './routes/auth.js';
@@ -11,6 +12,13 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 3000;
 
+// Permitir todas las conexiones (desarrollo)
+app.use(cors());
+
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://localhost:3000'],
+  credentials: true
+}));
 // Middleware to parse JSON requests
 app.use(express.json());
 
