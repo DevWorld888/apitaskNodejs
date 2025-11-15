@@ -23,8 +23,8 @@ body, html {
 /* SIDEBAR */
 .sidebar {
   width: 280px;
-  background: white;
-  border-right: 1px solid #e5e7eb;
+  background: #0D1117;
+  /* border-right: 1px solid #e5e7eb; */
   display: flex;
   flex-direction: column;
   transition: transform 0.3s ease;
@@ -33,7 +33,7 @@ body, html {
 
 .sidebar-header {
   padding: 20px 24px;
-  border-bottom: 1px solid #f3f4f6;
+  /* border-bottom: 1px solid #758A93; */
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -52,7 +52,7 @@ body, html {
 .logo-text {
   font-size: 20px;
   font-weight: 700;
-  color: #111827;
+  color: #DFD0B8;
 }
 
 .sidebar-close {
@@ -76,10 +76,11 @@ body, html {
 .nav-title {
   font-size: 11px;
   font-weight: 600;
-  color: #9ca3af;
+  color: #DFD0B8;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin: 0 24px 12px;
+  
 }
 
 .nav-section ul {
@@ -89,25 +90,25 @@ body, html {
 .nav-item {
   display: flex;
   align-items: center;
-  padding: 12px 24px;
-  margin: 0 12px;
-  border-radius: 8px;
+  padding: 9px 9px;
+  margin: 2px 12px;
+  border-radius: 5px;
   cursor: pointer;
   transition: all 0.2s ease;
   gap: 12px;
-  color: #6b7280;
+  color: #EEEEEE;
   font-size: 14px;
   font-weight: 500;
 }
 
 .nav-item:hover {
-  background: #f3f4f6;
-  color: #374151;
+  background: #31363F;
+  color: #f0fdf4;
 }
 
 .nav-item.active {
-  background: #f0fdf4;
-  color: #16a34a;
+  background: #31363F;
+  color: #f0fdf4;
 }
 
 .nav-icon {
@@ -134,8 +135,8 @@ body, html {
 
 /* HEADER */
 .dashboard-header {
-  background: white;
-  border-bottom: 1px solid #e5e7eb;
+  background: #0D1117;;
+  /* border-bottom: 1px solid #e5e7eb; */
   padding: 16px 32px;
   display: flex;
   align-items: center;
@@ -214,7 +215,7 @@ body, html {
 }
 
 .header-btn:hover {
-  background: #f3f4f6;
+  background: #5d5d5e;
 }
 
 .user-profile {

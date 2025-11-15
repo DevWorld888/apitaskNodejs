@@ -2,6 +2,17 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Dashboard.css";
 import { FcReddit, FcRules } from "react-icons/fc";
+import { RiDashboardHorizontalFill } from "react-icons/ri";
+import { FaCat, FaTasks } from "react-icons/fa";
+import { IoCalendarNumberOutline } from "react-icons/io5";
+import { IoAnalyticsSharp } from "react-icons/io5";
+import { BsMicrosoftTeams } from "react-icons/bs";
+import { IoSettings } from "react-icons/io5";
+import { TbHelpHexagonFilled } from "react-icons/tb";
+import { RiLogoutBoxFill } from "react-icons/ri";
+import { MdEmail } from "react-icons/md";
+import { IoNotifications } from "react-icons/io5";
+import { FaUserCog } from "react-icons/fa";
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -60,7 +71,7 @@ function Dashboard() {
       <aside className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <div className="sidebar-header">
           <div className="logo">
-            <span className="logo-icon"><FcRules /></span>
+            <span className="logo-icon"><FaCat /></span>
             <h2 className="logo-text">Task Manager</h2>
           </div>
           <button className="sidebar-close" onClick={toggleSidebar}>✕</button>
@@ -71,24 +82,24 @@ function Dashboard() {
             <span className="nav-title">MENU</span>
             <ul>
               <li className="nav-item active">
-                <span className="nav-icon">📊</span>
+                <span className="nav-icon"><RiDashboardHorizontalFill /></span>
                 Dashboard
               </li>
               <li className="nav-item">
-                <span className="nav-icon">✅</span>
+                <span className="nav-icon"><FaTasks /></span>
                 Tasks
                 <span className="nav-badge">154</span>
               </li>
               <li className="nav-item">
-                <span className="nav-icon">📅</span>
+                <span className="nav-icon"><IoCalendarNumberOutline /></span>
                 Calendar
               </li>
               <li className="nav-item">
-                <span className="nav-icon">📈</span>
+                <span className="nav-icon"><IoAnalyticsSharp /></span>
                 Analytics
               </li>
               <li className="nav-item">
-                <span className="nav-icon">👥</span>
+                <span className="nav-icon"><BsMicrosoftTeams /></span>
                 Team
               </li>
             </ul>
@@ -98,15 +109,15 @@ function Dashboard() {
             <span className="nav-title">GENERAL</span>
             <ul>
               <li className="nav-item">
-                <span className="nav-icon">⚙️</span>
+                <span className="nav-icon"><IoSettings /></span>
                 Settings
               </li>
               <li className="nav-item">
-                <span className="nav-icon">❓</span>
+                <span className="nav-icon"><TbHelpHexagonFilled /></span>
                 Help
               </li>
               <li className="nav-item" onClick={handleLogout}>
-                <span className="nav-icon">🚪</span>
+                <span className="nav-icon"><RiLogoutBoxFill /></span>
                 Logout
               </li>
             </ul>
@@ -138,13 +149,13 @@ function Dashboard() {
           
           <div className="header-right">
             <button className="header-btn">
-              <span className="icon">📧</span>
+              <span className="icon"><MdEmail /></span>
             </button>
             <button className="header-btn">
-              <span className="icon">🔔</span>
+              <span className="icon"><IoNotifications /></span>
             </button>
             <div className="user-profile">
-              <FcReddit />
+              <FaUserCog />
               <div className="user-info">
                 <span className="user-name">John Doe</span>
                 <span className="user-email">john@example.com</span>
