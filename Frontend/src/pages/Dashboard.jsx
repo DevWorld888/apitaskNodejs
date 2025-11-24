@@ -13,6 +13,7 @@ import { RiLogoutBoxFill } from "react-icons/ri";
 import { MdEmail } from "react-icons/md";
 import { IoNotifications } from "react-icons/io5";
 import { FaUserCog } from "react-icons/fa";
+import Tasks from "./Tasks/Tasks";
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -63,6 +64,71 @@ function Dashboard() {
   const handleNavigation = (view) => {
     setCurrentView(view);
     setSidebarOpen(false); // Cerrar sidebar en móvil después de navegar
+  };
+
+  // Funciones para manejo de tareas
+  const handleUpdateTask = async (taskId, updatedTask) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`http://localhost:3000/tasks/${taskId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(updatedTask)
+      });
+
+      if (response.ok) {
+        await fetchTasks(); // Recargar tareas
+      } else {
+        console.error("Error updating task");
+      }
+    } catch (error) {
+      console.error("Error updating task:", error);
+    }
+  };
+
+  const handleDeleteTask = async (taskId) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`http://localhost:3000/tasks/${taskId}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        await fetchTasks(); // Recargar tareas
+      } else {
+        console.error("Error deleting task");
+      }
+    } catch (error) {
+      console.error("Error deleting task:", error);
+    }
+  };
+
+  const handleToggleComplete = async (taskId, completed) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`http://localhost:3000/tasks/${taskId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ completed })
+      });
+
+      if (response.ok) {
+        await fetchTasks(); // Recargar tareas
+      } else {
+        console.error("Error toggling task completion");
+      }
+    } catch (error) {
+      console.error("Error toggling task completion:", error);
+    }
   };
 
   // Estadísticas calculadas
@@ -249,61 +315,13 @@ function Dashboard() {
   );
 
   const renderTasksView = () => (
-    <>
-      <div className="page-header">
-        <div className="page-title">
-          <h1>Tasks</h1>
-          <p>Manage and organize your tasks efficiently.</p>
-        </div>
-        <div className="page-actions">
-          <button className="btn btn-primary">
-            <span className="btn-icon">➕</span>
-            New Task
-          </button>
-          <button className="btn btn-secondary">Filter</button>
-        </div>
-      </div>
-
-      <div className="tasks-container">
-        {loading ? (
-          <div className="loading">Loading tasks...</div>
-        ) : (
-          <div className="tasks-list">
-            {tasks.map(task => (
-              <div key={task.id} className="task-card">
-                <div className="task-header">
-                  <div className="task-checkbox">
-                    <input 
-                      type="checkbox" 
-                      checked={task.completed}
-                      onChange={() => {/* TODO: Toggle task completion */}}
-                    />
-                  </div>
-                  <div className="task-info">
-                    <h3 className={task.completed ? 'completed' : ''}>{task.title}</h3>
-                    <p>{task.description || 'No description'}</p>
-                  </div>
-                  <div className="task-meta">
-                    <span className={`priority ${task.priority?.toLowerCase()}`}>
-                      {task.priority}
-                    </span>
-                    <div className="task-actions">
-                      <button className="btn-icon">✏️</button>
-                      <button className="btn-icon">🗑️</button>
-                    </div>
-                  </div>
-                </div>
-                {task.dueDate && (
-                  <div className="task-due-date">
-                    Due: {new Date(task.dueDate).toLocaleDateString()}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </>
+    <Tasks 
+      tasks={tasks} 
+      loading={loading}
+      onUpdateTask={handleUpdateTask}
+      onDeleteTask={handleDeleteTask} 
+      onToggleComplete={handleToggleComplete}
+    />
   );
 
   const renderCalendarView = () => (
