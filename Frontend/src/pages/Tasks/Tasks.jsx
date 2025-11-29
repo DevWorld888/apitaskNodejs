@@ -1,24 +1,29 @@
 import React, { useState } from 'react';
 import './Tasks.css';
 
-const Tasks = ({ tasks, loading, onUpdateTask, onDeleteTask, onToggleComplete }) => {
+const Tasks = ({ tasks = [], loading, onUpdateTask, onDeleteTask, onToggleComplete }) => {
   const [showModal, setShowModal] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
+  const [draggedTask, setDraggedTask] = useState(null);
   const [taskForm, setTaskForm] = useState({
     title: '',
     description: '',
     priority: 'Medium',
-    dueDate: ''
+    dueDate: '',
+    status: 'todo',
+    completed: false
   });
 
-  // Colores para las tarjetas
-  const cardColors = [
-    'task-card-blue',
-    'task-card-purple', 
-    'task-card-yellow',
-    'task-card-pink',
-    'task-card-green'
-  ];
+  // Función para categorizar tareas por estado
+  const categorizeTasksByStatus = (tasks) => {
+    return {
+      todo: tasks.filter(task => !task.completed && (!task.status || task.status === 'todo')),
+      doing: tasks.filter(task => !task.completed && task.status === 'doing'),
+      done: tasks.filter(task => task.completed || task.status === 'done')
+    };
+  };
+
+  const tasksByStatus = categorizeTasksByStatus(tasks);
 
   const handleEditTask = (task) => {
     setEditingTask(task);
@@ -26,7 +31,8 @@ const Tasks = ({ tasks, loading, onUpdateTask, onDeleteTask, onToggleComplete })
       title: task.title,
       description: task.description || '',
       priority: task.priority || 'Medium',
-      dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : ''
+      dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
+      status: task.status || 'todo'
     });
     setShowModal(true);
   };
@@ -42,84 +48,264 @@ const Tasks = ({ tasks, loading, onUpdateTask, onDeleteTask, onToggleComplete })
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (editingTask && onUpdateTask) {
-      await onUpdateTask(editingTask.id, taskForm);
+      const updatedTask = {
+        ...taskForm,
+        completed: taskForm.status === 'done'
+      };
+      await onUpdateTask(editingTask.id, updatedTask);
       setShowModal(false);
       setEditingTask(null);
     }
   };
 
-  const formatTime = (date) => {
-    if (!date) return '10:30 AM - 12:00 PM';
+  // Funciones de Drag & Drop
+  const handleDragStart = (e, task) => {
+    setDraggedTask(task);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = async (e, status) => {
+    e.preventDefault();
+    if (draggedTask && onUpdateTask) {
+      const updatedTask = {
+        ...draggedTask,
+        status: status,
+        completed: status === 'done'
+      };
+      await onUpdateTask(draggedTask.id, updatedTask);
+      setDraggedTask(null);
+    }
+  };
+
+  const formatDate = (date) => {
+    if (!date) return '';
     const taskDate = new Date(date);
-    return taskDate.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    }) + ' - ' + new Date(taskDate.getTime() + 90*60000).toLocaleTimeString('en-US', {
-      hour: 'numeric', 
-      minute: '2-digit',
-      hour12: true
+    return taskDate.toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: 'short'
     });
   };
 
+  const getPriorityColor = (priority) => {
+    switch(priority?.toLowerCase()) {
+      case 'high': return '#ff4757';
+      case 'medium': return '#ffa726';
+      case 'low': return '#42a5f5';
+      default: return '#ffa726';
+    }
+  };
+
+  const getRandomAvatar = (index) => {
+    const avatars = ['👤', '👨‍💼', '👩‍💼', '👨‍💻', '👩‍💻', '👨‍🎨', '👩‍🎨'];
+    return avatars[index % avatars.length];
+  };
+
   return (
-    <div className="tasks-page">
-      <div className="page-header">
-        <div className="page-title">
-          <h1>Tasks</h1>
-          <p>Manage and organize your tasks efficiently.</p>
-        </div>
-        <div className="page-actions">
-          <button className="btn btn-primary">
-            <span className="btn-icon">➕</span>
-            New Task
-          </button>
-          <button className="btn btn-secondary">Filter</button>
-        </div>
+    <div className="kanban-page">
+      <div className="kanban-header">
+        <h1>Task Board</h1>
+        <button className="add-task-btn" onClick={() => setShowModal(true)}>
+          <span className="add-icon">+</span>
+          Add Task
+        </button>
       </div>
 
       {loading ? (
         <div className="loading">Loading tasks...</div>
       ) : (
-        <div className="tasks-grid">
-          {tasks.map((task, index) => (
-            <div key={task.id} className={`task-card ${cardColors[index % cardColors.length]}`}>
-              <div className="task-card-header">
-                <h3 className="task-title">{task.title}</h3>
-                <div className="task-menu">
-                  <button className="menu-dots">⋯</button>
-                  <div className="menu-dropdown">
-                    <button onClick={() => handleEditTask(task)} className="menu-item">
-                      ✏️ Edit
-                    </button>
-                    <button onClick={() => handleDeleteTask(task.id)} className="menu-item delete">
-                      🗑️ Delete
-                    </button>
-                    <button 
-                      onClick={() => onToggleComplete && onToggleComplete(task.id, !task.completed)}
-                      className="menu-item"
-                    >
-                      {task.completed ? '↩️ Undo' : '✅ Complete'}
-                    </button>
+        <div className="kanban-board">
+          {/* TO DO Column */}
+          <div className="kanban-column"
+               onDragOver={handleDragOver}
+               onDrop={(e) => handleDrop(e, 'todo')}>
+            <div className="column-header">
+              <div className="column-title">
+                <span className="column-icon">📝</span>
+                <span>To do</span>
+                <span className="task-count">{tasksByStatus.todo.length}</span>
+              </div>
+              <button className="add-column-task">+</button>
+            </div>
+            <div className="column-content">
+              {tasksByStatus.todo.map((task, index) => (
+                <div 
+                  key={task.id} 
+                  className="kanban-task"
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, task)}
+                >
+                  <div className="task-header">
+                    <div className="task-menu">
+                      <button className="menu-dots" onClick={() => handleEditTask(task)}>⋯</button>
+                    </div>
+                  </div>
+                  
+                  <h3 className="task-title">{task.title}</h3>
+                  <p className="task-description">
+                    {task.description || 'No description provided'}
+                  </p>
+                  
+                  <div className="task-footer">
+                    <div className="task-meta">
+                      <span 
+                        className="priority-badge"
+                        style={{ backgroundColor: getPriorityColor(task.priority) }}
+                      >
+                        {task.priority || 'Medium'}
+                      </span>
+                      <span className="task-status">
+                        {task.status === 'todo' ? 'On Track' : 'At Risk'}
+                      </span>
+                    </div>
+                    <div className="task-bottom">
+                      <div className="task-date">
+                        <span className="date-icon">📅</span>
+                        <span>{formatDate(task.dueDate) || '12 Jul'}</span>
+                        <span className="comment-count">2 💬</span>
+                      </div>
+                      <div className="task-avatar">{getRandomAvatar(index)}</div>
+                    </div>
                   </div>
                 </div>
-              </div>
-              
-              <p className="task-description">
-                {task.description || 'Lorem ipsum dolor sit amet, consectetur elit iddv niotem idjsfjfi.'}
-              </p>
-              
-              <div className="task-time">
-                {formatTime(task.dueDate)}
-              </div>
-
-              {task.completed && (
-                <div className="task-completed-badge">
-                  ✅ Completed
-                </div>
-              )}
+              ))}
             </div>
-          ))}
+          </div>
+
+          {/* DOING Column */}
+          <div className="kanban-column"
+               onDragOver={handleDragOver}
+               onDrop={(e) => handleDrop(e, 'doing')}>
+            <div className="column-header">
+              <div className="column-title">
+                <span className="column-icon">⚡</span>
+                <span>Doing</span>
+                <span className="task-count">{tasksByStatus.doing.length}</span>
+              </div>
+              <button className="add-column-task">+</button>
+            </div>
+            <div className="column-content">
+              {tasksByStatus.doing.map((task, index) => (
+                <div 
+                  key={task.id} 
+                  className="kanban-task doing"
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, task)}
+                >
+                  <div className="task-header">
+                    <div className="task-menu">
+                      <button className="menu-dots" onClick={() => handleEditTask(task)}>⋯</button>
+                    </div>
+                  </div>
+                  
+                  <h3 className="task-title">{task.title}</h3>
+                  <p className="task-description">
+                    {task.description || 'No description provided'}
+                  </p>
+                  
+                  <div className="task-footer">
+                    <div className="task-meta">
+                      <span 
+                        className="priority-badge"
+                        style={{ backgroundColor: getPriorityColor(task.priority) }}
+                      >
+                        {task.priority || 'Medium'}
+                      </span>
+                      <span className="task-status at-risk">
+                        At Risk
+                      </span>
+                    </div>
+                    <div className="task-bottom">
+                      <div className="task-date">
+                        <span className="date-icon">📅</span>
+                        <span>{formatDate(task.dueDate) || '12 Jul'}</span>
+                        <span className="comment-count">2 💬</span>
+                      </div>
+                      <div className="task-avatar">{getRandomAvatar(index + 3)}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* DONE Column */}
+          <div className="kanban-column"
+               onDragOver={handleDragOver}
+               onDrop={(e) => handleDrop(e, 'done')}>
+            <div className="column-header">
+              <div className="column-title">
+                <span className="column-icon">✅</span>
+                <span>Done</span>
+                <span className="task-count">{tasksByStatus.done.length}</span>
+              </div>
+              <button className="add-column-task">+</button>
+            </div>
+            <div className="column-content">
+              {tasksByStatus.done.map((task, index) => (
+                <div 
+                  key={task.id} 
+                  className="kanban-task done"
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, task)}
+                >
+                  <div className="task-header">
+                    <div className="task-menu">
+                      <button className="menu-dots" onClick={() => handleEditTask(task)}>⋯</button>
+                    </div>
+                  </div>
+                  
+                  <h3 className="task-title">{task.title}</h3>
+                  <p className="task-description">
+                    {task.description || 'No description provided'}
+                  </p>
+                  
+                  <div className="task-footer">
+                    <div className="task-meta">
+                      <span 
+                        className="priority-badge"
+                        style={{ backgroundColor: getPriorityColor(task.priority) }}
+                      >
+                        {task.priority || 'Medium'}
+                      </span>
+                      <span className="task-status on-track">
+                        On Track
+                      </span>
+                    </div>
+                    <div className="task-bottom">
+                      <div className="task-date">
+                        <span className="date-icon">📅</span>
+                        <span>{formatDate(task.dueDate) || '10 Jul'}</span>
+                        <span className="comment-count">2 💬</span>
+                      </div>
+                      <div className="task-avatar">{getRandomAvatar(index + 6)}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Untitled Section */}
+          <div className="kanban-column untitled">
+            <div className="column-header">
+              <div className="column-title">
+                <span className="column-icon">📂</span>
+                <span>Untitled section</span>
+              </div>
+              <button className="add-column-task">+</button>
+            </div>
+            <div className="column-content">
+              <button className="add-task-placeholder">
+                <span className="add-icon">+</span>
+                Add Task
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -167,6 +353,17 @@ const Tasks = ({ tasks, loading, onUpdateTask, onDeleteTask, onToggleComplete })
                   value={taskForm.dueDate}
                   onChange={(e) => setTaskForm({...taskForm, dueDate: e.target.value})}
                 />
+              </div>
+              <div className="form-group">
+                <label>Status</label>
+                <select
+                  value={taskForm.status}
+                  onChange={(e) => setTaskForm({...taskForm, status: e.target.value})}
+                >
+                  <option value="todo">To Do</option>
+                  <option value="doing">Doing</option>
+                  <option value="done">Done</option>
+                </select>
               </div>
               <div className="form-actions">
                 <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>

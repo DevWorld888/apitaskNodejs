@@ -42,6 +42,7 @@ function Dashboard() {
       if (res.ok) {
         const data = await res.json();
         setTasks(data.tasks);
+        console.log("Fetched tasks:", data.tasks);
       } else {
         navigate("/login");
       }
@@ -92,7 +93,7 @@ function Dashboard() {
   const handleDeleteTask = async (taskId) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`http://localhost:3000/tasks/${taskId}`, {
+      const response = await fetch(`http://localhost:3000/api/tasks/${taskId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer ${token}`
